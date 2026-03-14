@@ -115,7 +115,7 @@ int main() {
     {
         opinions_changed = update_opinions();
         iteration++;
-        if ((iteration>max_iterations) || (opinions_changed==false))
+        if ((iteration>=max_iterations) || (opinions_changed==false))
             break;    
     }
 
