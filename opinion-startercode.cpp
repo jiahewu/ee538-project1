@@ -26,23 +26,66 @@ std::vector<std::vector<int>> edge_list;
 
 void build_adj_matrix()
 {
+    // Initialize adjacency matrix with zeros
+    adj.resize(total_nodes, vector<int>(total_nodes, 0));
     
+    // Traverse edge list and populate adjacency matrix
+    for(int i = 0; i < edge_list.size(); i++)
+    {
+        int source = edge_list[i][0];
+        int target = edge_list[i][1];
+        adj[source][target] = 1;
+    //    adj[target][source] = 1; // undirected graph
+    }
 }
 
 double calculate_fraction_of_ones()
 {
-   
+   double count_ones = 0;
+    for(int i = 0; i < opinions.size(); i++)
+    {
+         if(opinions[i] == 1) count_ones++;
+    }
+    return count_ones / opinions.size();
 }
 
 // For a given node, count majority opinion among its neighbours. Tie -> 0.
 int get_majority_friend_opinions(int node)
 {
-
+    int count_ones = 0;
+    int count_zeros = 0;
+    
+    for (int j = 0; j < total_nodes; j++)
+    {
+        if(adj[j][node]) // if j is a friend of node
+        {
+            if(opinions[j] == 1) count_ones++;
+            else count_zeros++;
+        }
+    }
+    
+    if(count_ones > count_zeros) return 1;
+    else if(count_zeros > count_ones) return 0;
+    else return 0; // Tie -> 0
 }
 
 // Calculate new opinions for all voters and return if anyone's opinion changed
 bool update_opinions()
 {
+    std::vector<int> new_opinions = opinions; // Create a copy of current opinions
+    int majority_opinion;
+    bool changed = false;
+    for (int i = 0; i < total_nodes; i++)
+    {
+        majority_opinion = get_majority_friend_opinions(i);
+        if(majority_opinion != opinions[i])
+        {
+            new_opinions[i] = majority_opinion;
+            changed = true;
+        }   
+    }
+    opinions = new_opinions; // Copy new opinions back to the original vector
+    return changed;   
 
 }
 
@@ -68,7 +111,13 @@ int main() {
          << calculate_fraction_of_ones() << endl;
     
     /// (6)  //////////////////////////////////////////////
-    
+    while (1)
+    {
+        opinions_changed = update_opinions();
+        iteration++;
+        if ((iteration>max_iterations) || (opinions_changed==false))
+            break;    
+    }
 
     ////////////////////////////////////////////////////////
     // Print final result
