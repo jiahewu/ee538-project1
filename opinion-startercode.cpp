@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <cstdint>
 using namespace std;
 
 /********************DO NOT EDIT**********************/
@@ -16,26 +17,26 @@ int total_nodes = 0; // We keep track of the total number of nodes based on larg
 
 /******** Create adjacency matrix and vector of opinions */
 // simple vector to hold each node's opinion (0 or 1)
-std::vector<int> opinions;
+std::vector<uint8_t> opinions;
 
-// global adjacency matrix initialized later
-std::vector<std::vector<int>> adj;
+// adjacency list: in_neighbors[i] contains all nodes that have edges TO node i
+std::vector<std::vector<int>> in_neighbors;
 
 // edge list: each row contains {source, target}
 std::vector<std::vector<int>> edge_list;
 
 void build_adj_matrix()
 {
-    // Initialize adjacency matrix with zeros
-    adj.resize(total_nodes, vector<int>(total_nodes, 0));
+    // Initialize adjacency list with empty vectors for each node
+    in_neighbors.resize(total_nodes);
     
-    // Traverse edge list and populate adjacency matrix
+    // Traverse edge list and populate adjacency list
+    // in_neighbors[target] will contain all nodes that have edges TO target
     for(int i = 0; i < edge_list.size(); i++)
     {
         int source = edge_list[i][0];
         int target = edge_list[i][1];
-        adj[source][target] = 1;
-    //    adj[target][source] = 1; // undirected graph
+        in_neighbors[target].push_back(source);
     }
 }
 
@@ -55,13 +56,11 @@ int get_majority_friend_opinions(int node)
     int count_ones = 0;
     int count_zeros = 0;
     
-    for (int j = 0; j < total_nodes; j++)
+    // Iterate only over actual neighbors (incoming edges)
+    for (int neighbor : in_neighbors[node])
     {
-        if(adj[j][node]) // if j is a friend of node
-        {
-            if(opinions[j] == 1) count_ones++;
-            else count_zeros++;
-        }
+        if(opinions[neighbor] == 1) count_ones++;
+        else count_zeros++;
     }
     
     if(count_ones > count_zeros) return 1;
@@ -72,7 +71,7 @@ int get_majority_friend_opinions(int node)
 // Calculate new opinions for all voters and return if anyone's opinion changed
 bool update_opinions()
 {
-    std::vector<int> new_opinions = opinions; // Create a copy of current opinions
+    std::vector<uint8_t> new_opinions = opinions; // Create a copy of current opinions
     int majority_opinion;
     bool changed = false;
     for (int i = 0; i < total_nodes; i++)
